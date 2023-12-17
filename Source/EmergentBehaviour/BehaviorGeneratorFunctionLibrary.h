@@ -11,7 +11,8 @@ enum class EAttributeType
 {
 	Trait,
 	Possession,
-	Location
+	Location,
+	Object
 };
 
 UENUM(BlueprintType)
@@ -27,11 +28,11 @@ struct FAttribute
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	EAttributeType m_Type;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	bool m_IsNegated = false;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	FString m_Value;
 };
 
@@ -49,6 +50,7 @@ enum class EOperation
 {
 	Add,
 	Remove,
+	Move
 };
 
 USTRUCT(BlueprintType)
@@ -71,12 +73,25 @@ struct FAgentState
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	FString m_Name;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	TArray<FAttribute> m_Attributes;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	ETarget m_Role;
+};
+
+USTRUCT(BlueprintType)
+struct FItem
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	EAttributeType m_Type;
+	UPROPERTY()
+	FString m_Value;
+	UPROPERTY()
+	TArray<FRequirement> m_Requirements;
 };
 
 USTRUCT(BlueprintType)
@@ -91,8 +106,6 @@ struct FAction
 	UPROPERTY()
 	TArray<FConsequence> m_Consequences;
 };
-
-// TODO Add Objects
 
 /**
  * 
@@ -109,6 +122,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	static TArray<FAgentState> ParseAgents(const FString FilePath);
+
+	UFUNCTION(BlueprintCallable)
+	static TArray<FItem> ParseItems(const FString FilePath);
+
+	UFUNCTION(BlueprintCallable)
+	static TArray<FAction>& AddItemInteractionActions(const TArray<FItem> Items, UPARAM(ref) TArray<FAction>& AvailableActions);
 	
 	UFUNCTION(BlueprintCallable)
 	static TArray<FAgentState>& PrintGeneratedStory(UPARAM(ref) TArray<FAction>& AvailableActions, UPARAM(ref) TArray<FAgentState>& AvailableAgents);
@@ -118,6 +137,8 @@ private:
 	static FAction ParseLineIntoAction(TArray<FString> Line);
 
 	static FAgentState ParseLineIntoAgent(TArray<FString> Line);
+
+	static FItem ParseLineIntoItem(TArray<FString> Line);
 
 	static bool AssignRoles(TArray<FAgentState>& AvailableAgents, const TArray<FRequirement>& Requirements, TArray<FAgentState>& OutSelectedAgents);
 

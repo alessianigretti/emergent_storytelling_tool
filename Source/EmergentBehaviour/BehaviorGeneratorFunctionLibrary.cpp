@@ -63,6 +63,34 @@ TArray<FAgentState> UBehaviorGeneratorFunctionLibrary::ParseAgents(const FString
 	return ParsedAgents;
 }
 
+TArray<FItem> UBehaviorGeneratorFunctionLibrary::ParseItems(const FString FilePath)
+{
+	TArray<FString> OutStrings;
+	TArray<FItem> ParsedItems;
+
+	if (FPaths::FileExists(*FilePath))
+	{
+		FString FileContent;
+		FFileHelper::LoadFileToString(FileContent, *FilePath);
+
+		const TCHAR* Terminators[] = { L"\r", L"\n" };
+		const TCHAR* CSVDelimiters[] = { TEXT(",") };
+
+		TArray<FString> CSVLines;
+		FileContent.ParseIntoArray(CSVLines, Terminators, 2);
+
+		TArray<FString> TempLine;
+		for (int i = 0; i < CSVLines.Num(); i++)
+		{
+			TempLine.Empty();
+			CSVLines[i].ParseIntoArray(TempLine, CSVDelimiters, 1);
+			ParsedItems.Add(ParseLineIntoItem(TempLine));
+		}
+	}
+
+	return ParsedItems;
+}
+
 FAction UBehaviorGeneratorFunctionLibrary::ParseLineIntoAction(TArray<FString> Line)
 {
 	FAction Action;
@@ -225,11 +253,144 @@ FAgentState UBehaviorGeneratorFunctionLibrary::ParseLineIntoAgent(TArray<FString
 		Attribute.m_Value = Value;
 
 		Agent.m_Attributes.Add(Attribute);
-
-		continue;
 	}
 
 	return Agent;
+}
+
+FItem UBehaviorGeneratorFunctionLibrary::ParseLineIntoItem(TArray<FString> Line)
+{
+	FItem Item;
+
+	for (FString Value : Line)
+	{
+		if (Value.StartsWith(L"Name_"))
+		{
+			Item.m_Value = Value.Mid(5);
+
+			Value.RemoveAt(0, 5);
+
+			if (Value.StartsWith(L"O"))
+			{
+				Item.m_Type = EAttributeType::Object;
+			}
+			else if (Value.StartsWith(L"L"))
+			{
+				Item.m_Type = EAttributeType::Location;
+			}
+
+			Value.RemoveAt(0, 2);
+
+			Item.m_Value = Value;
+		}
+		else
+		{
+			FRequirement Requirement;
+
+			if (Value.StartsWith(L"T"))
+			{
+				Requirement.m_Type = EAttributeType::Trait;
+			}
+			else if (Value.StartsWith(L"P"))
+			{
+				Requirement.m_Type = EAttributeType::Possession;
+			}
+
+			Value.RemoveAt(0);
+
+			if (Value.StartsWith(L"L_"))
+			{
+				Requirement.m_Type = EAttributeType::Location;
+				Value.RemoveAt(0, 2);
+			}
+
+			Requirement.m_Target = ETarget::Target1;
+
+			if (Value.StartsWith(L"1"))
+			{
+				Requirement.m_Target = ETarget::Target1;
+				Value.RemoveAt(0);
+			}
+			else if (Value.StartsWith(L"2"))
+			{
+				Requirement.m_Target = ETarget::Target2;
+				Value.RemoveAt(0);
+			}
+
+			Value.RemoveAt(0);
+
+			if (Value.StartsWith(L"N_"))
+			{
+				Requirement.m_IsNegated = true;
+				Value.RemoveAt(0, 2);
+			}
+
+			Requirement.m_Value = Value;
+
+			Item.m_Requirements.Add(Requirement);
+		}
+	}
+
+	return Item;
+}
+
+TArray<FAction>& UBehaviorGeneratorFunctionLibrary::AddItemInteractionActions(const TArray<FItem> Items, UPARAM(ref) TArray<FAction>& AvailableActions)
+{
+	for (const FItem& Item : Items)
+	{
+		FAction Action;
+
+		if (Item.m_Type == EAttributeType::Location)
+		{
+			Action.m_Name = "going to " + Item.m_Value;
+
+			Action.m_Requirements = Item.m_Requirements;
+
+			FRequirement Requirement;
+
+			Requirement.m_IsNegated = true;
+			Requirement.m_Type = EAttributeType::Location;
+			Requirement.m_Target = ETarget::Target1;
+			Requirement.m_Value = Item.m_Value;
+			
+			FConsequence Consequence;
+
+			Consequence.m_Operation = EOperation::Move;
+			Consequence.m_Type = EAttributeType::Location;
+			Consequence.m_Target = ETarget::Target1;
+			Consequence.m_Value = Item.m_Value;
+
+			Action.m_Requirements.Add(Requirement);
+			Action.m_Consequences.Add(Consequence);
+		}
+		else if (Item.m_Type == EAttributeType::Object)
+		{
+			Action.m_Name = "picking up %s", Item.m_Value;
+
+			Action.m_Requirements = Item.m_Requirements;
+
+			FRequirement Requirement;
+
+			Requirement.m_IsNegated = true;
+			Requirement.m_Type = EAttributeType::Possession;
+			Requirement.m_Target = ETarget::Target1;
+			Requirement.m_Value = Item.m_Value;
+
+			FConsequence Consequence;
+
+			Consequence.m_Operation = EOperation::Add;
+			Consequence.m_Type = EAttributeType::Object;
+			Consequence.m_Target = ETarget::Target1;
+			Consequence.m_Value = Item.m_Value;
+
+			Action.m_Requirements.Add(Requirement);
+			Action.m_Consequences.Add(Consequence);
+		}
+
+		AvailableActions.Add(Action);
+	}
+
+	return AvailableActions;
 }
 
 TArray<FAgentState>& UBehaviorGeneratorFunctionLibrary::PrintGeneratedStory(TArray<FAction>& AvailableActions, TArray<FAgentState>& AvailableAgents)
@@ -340,6 +501,16 @@ void UBehaviorGeneratorFunctionLibrary::ApplyConsequences(TArray<FAgentState>& A
 								}
 							}
 						}
+						else if (Consequence.m_Operation == EOperation::Move)
+						{
+							for (FAttribute& Attribute : AvailableAgent.m_Attributes)
+							{
+								if (Attribute.m_Type == EAttributeType::Location)
+								{
+									Attribute.m_Value = Consequence.m_Value;
+								}
+							}
+						}
 
 						break;
 					}
@@ -421,6 +592,10 @@ FString UBehaviorGeneratorFunctionLibrary::GenerateTextForConsequences(const TAr
 		else if (Consequences[i].m_Operation == EOperation::Remove)
 		{
 			Text.Append("removed ");
+		}
+		else if (Consequences[i].m_Operation == EOperation::Move)
+		{
+			Text.Append("moved to ");
 		}
 
 		Text.Append(Consequences[i].m_Value);

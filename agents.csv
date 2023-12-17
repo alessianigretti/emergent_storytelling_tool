@@ -1,5 +1,5 @@
-Name_angelo,P_school,P_weapon,T_confidence
-Name_mauro,P_job,P_subscription
-Name_jamie,T_thirsty,P_steak
-Name_gianfilippo,P_money,T_lazy,T_selfish,T_political
-Name_alessia,T_hungry
+Name_angelo,L_school,P_weapon,T_confidence
+Name_mauro,L_office,P_job,P_subscription
+Name_jamie,L_park,T_thirsty,P_steak
+Name_gianfilippo,L_office,P_job,P_money,T_lazy,T_selfish,T_political
+Name_alessia,L_home,P_home,T_hungry
