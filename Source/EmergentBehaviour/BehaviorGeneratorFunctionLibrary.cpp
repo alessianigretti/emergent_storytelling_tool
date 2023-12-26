@@ -7,85 +7,76 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogBehaviorGenerator, Log, All);
 DEFINE_LOG_CATEGORY(LogBehaviorGenerator);
 
-TArray<FAction> UBehaviorGeneratorFunctionLibrary::ParseActions(const FString FilePath)
+TArray<FAction> UBehaviorGeneratorFunctionLibrary::ParseActions(const UDataTable* ActionsDT)
 {
 	TArray<FString> OutStrings;
 	TArray<FAction> ParsedActions;
 
-	if (FPaths::FileExists(*FilePath))
+	const TCHAR* Terminators[] = { L"\r", L"\n" };
+	const TCHAR* CSVDelimiters[] = { TEXT(",") };
+
+	TArray<FString> CSVLines;
+	FString CSVTable = ActionsDT->GetTableAsCSV();
+	CSVTable = CSVTable.Replace(L"\\", L"");
+	CSVTable = CSVTable.Replace(L"\"", L"");
+	CSVTable.ParseIntoArray(CSVLines, Terminators, 2);
+
+	TArray<FString> TempLine;
+	for (int i = 1; i < CSVLines.Num(); i++)
 	{
-		FString FileContent;
-		FFileHelper::LoadFileToString(FileContent, *FilePath);
-
-		const TCHAR* Terminators[] = { L"\r", L"\n" };
-		const TCHAR* CSVDelimiters[] = { TEXT(",") };
-
-		TArray<FString> CSVLines;
-		FileContent.ParseIntoArray(CSVLines, Terminators, 2);
-
-		TArray<FString> TempLine;
-		for (int i = 0; i < CSVLines.Num(); i++)
-		{
-			TempLine.Empty();
-			CSVLines[i].ParseIntoArray(TempLine, CSVDelimiters, 1);
-			ParsedActions.Add(ParseLineIntoAction(TempLine));
-		}
+		TempLine.Empty();
+		CSVLines[i].ParseIntoArray(TempLine, CSVDelimiters, 1);
+		ParsedActions.Add(ParseLineIntoAction(TempLine));
 	}
 
 	return ParsedActions;
 }
 
-TArray<FAgentState> UBehaviorGeneratorFunctionLibrary::ParseAgents(const FString FilePath)
+TArray<FAgentState> UBehaviorGeneratorFunctionLibrary::ParseAgents(const UDataTable* AgentsDT)
 {
 	TArray<FString> OutStrings;
 	TArray<FAgentState> ParsedAgents;
 
-	if (FPaths::FileExists(*FilePath))
+	const TCHAR* Terminators[] = { L"\r", L"\n" };
+	const TCHAR* CSVDelimiters[] = { TEXT(",") };
+
+	TArray<FString> CSVLines;
+	FString CSVTable = AgentsDT->GetTableAsCSV();
+	CSVTable = CSVTable.Replace(L"\\", L"");
+	CSVTable = CSVTable.Replace(L"\"", L"");
+	CSVTable.ParseIntoArray(CSVLines, Terminators, 2);
+
+	TArray<FString> TempLine;
+	for (int i = 1; i < CSVLines.Num(); i++)
 	{
-		FString FileContent;
-		FFileHelper::LoadFileToString(FileContent, *FilePath);
-
-		const TCHAR* Terminators[] = { L"\r", L"\n" };
-		const TCHAR* CSVDelimiters[] = { TEXT(",") };
-
-		TArray<FString> CSVLines;
-		FileContent.ParseIntoArray(CSVLines, Terminators, 2);
-
-		TArray<FString> TempLine;
-		for (int i = 0; i < CSVLines.Num(); i++)
-		{
-			TempLine.Empty();
-			CSVLines[i].ParseIntoArray(TempLine, CSVDelimiters, 1);
-			ParsedAgents.Add(ParseLineIntoAgent(TempLine));
-		}
+		TempLine.Empty();
+		CSVLines[i].ParseIntoArray(TempLine, CSVDelimiters, 1);
+		ParsedAgents.Add(ParseLineIntoAgent(TempLine));
 	}
 
 	return ParsedAgents;
 }
 
-TArray<FItem> UBehaviorGeneratorFunctionLibrary::ParseItems(const FString FilePath)
+TArray<FItem> UBehaviorGeneratorFunctionLibrary::ParseItems(const UDataTable* ItemsDT)
 {
 	TArray<FString> OutStrings;
 	TArray<FItem> ParsedItems;
 
-	if (FPaths::FileExists(*FilePath))
+	const TCHAR* Terminators[] = { L"\r", L"\n" };
+	const TCHAR* CSVDelimiters[] = { TEXT(",") };
+
+	TArray<FString> CSVLines;
+	FString CSVTable = ItemsDT->GetTableAsCSV();
+	CSVTable = CSVTable.Replace(L"\\", L"");
+	CSVTable = CSVTable.Replace(L"\"", L"");
+	CSVTable.ParseIntoArray(CSVLines, Terminators, 2);
+
+	TArray<FString> TempLine;
+	for (int i = 1; i < CSVLines.Num(); i++)
 	{
-		FString FileContent;
-		FFileHelper::LoadFileToString(FileContent, *FilePath);
-
-		const TCHAR* Terminators[] = { L"\r", L"\n" };
-		const TCHAR* CSVDelimiters[] = { TEXT(",") };
-
-		TArray<FString> CSVLines;
-		FileContent.ParseIntoArray(CSVLines, Terminators, 2);
-
-		TArray<FString> TempLine;
-		for (int i = 0; i < CSVLines.Num(); i++)
-		{
-			TempLine.Empty();
-			CSVLines[i].ParseIntoArray(TempLine, CSVDelimiters, 1);
-			ParsedItems.Add(ParseLineIntoItem(TempLine));
-		}
+		TempLine.Empty();
+		CSVLines[i].ParseIntoArray(TempLine, CSVDelimiters, 1);
+		ParsedItems.Add(ParseLineIntoItem(TempLine));
 	}
 
 	return ParsedItems;

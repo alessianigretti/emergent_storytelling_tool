@@ -1,6 +1,7 @@
-Name_L_school
-Name_L_park
-Name_L_office,P_job
-Name_L_shop,P_money
-Name_L_home,P_home
-Name_L_prison,T_killer
+"Name","Requirements"
+Name_L_school,""
+Name_L_park,""
+Name_L_office,"P_job"
+Name_L_shop,"P_money"
+Name_L_home,"P_home"
+Name_L_prison,"T_killer"

@@ -118,13 +118,13 @@ class EMERGENTBEHAVIOUR_API UBehaviorGeneratorFunctionLibrary : public UBlueprin
 public:
 
 	UFUNCTION(BlueprintCallable)
-	static TArray<FAction> ParseActions(const FString FilePath);
+	static TArray<FAction> ParseActions(const UDataTable* ActionsDT);
 
 	UFUNCTION(BlueprintCallable)
-	static TArray<FAgentState> ParseAgents(const FString FilePath);
+	static TArray<FAgentState> ParseAgents(const UDataTable* AgentsDT);
 
 	UFUNCTION(BlueprintCallable)
-	static TArray<FItem> ParseItems(const FString FilePath);
+	static TArray<FItem> ParseItems(const UDataTable* ItemsDT);
 
 	UFUNCTION(BlueprintCallable)
 	static TArray<FAction>& AddItemInteractionActions(const TArray<FItem> Items, UPARAM(ref) TArray<FAction>& AvailableActions);
