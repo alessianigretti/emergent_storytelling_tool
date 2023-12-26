@@ -9,7 +9,6 @@ DEFINE_LOG_CATEGORY(LogBehaviorGenerator);
 
 TArray<FAction> UBehaviorGeneratorFunctionLibrary::ParseActions(const UDataTable* ActionsDT)
 {
-	TArray<FString> OutStrings;
 	TArray<FAction> ParsedActions;
 
 	const TCHAR* Terminators[] = { L"\r", L"\n" };
@@ -34,7 +33,6 @@ TArray<FAction> UBehaviorGeneratorFunctionLibrary::ParseActions(const UDataTable
 
 TArray<FAgentState> UBehaviorGeneratorFunctionLibrary::ParseAgents(const UDataTable* AgentsDT)
 {
-	TArray<FString> OutStrings;
 	TArray<FAgentState> ParsedAgents;
 
 	const TCHAR* Terminators[] = { L"\r", L"\n" };
@@ -59,7 +57,6 @@ TArray<FAgentState> UBehaviorGeneratorFunctionLibrary::ParseAgents(const UDataTa
 
 TArray<FItem> UBehaviorGeneratorFunctionLibrary::ParseItems(const UDataTable* ItemsDT)
 {
-	TArray<FString> OutStrings;
 	TArray<FItem> ParsedItems;
 
 	const TCHAR* Terminators[] = { L"\r", L"\n" };
@@ -97,7 +94,9 @@ FAction UBehaviorGeneratorFunctionLibrary::ParseLineIntoAction(TArray<FString> L
 
 		if (Value.StartsWith(L"Name_"))
 		{
-			Action.m_Name = Value.Mid(5);
+			Value.RemoveAt(0, 5);
+			Value = Value.Replace(L"_", L" ");
+			Action.m_Name = Value;
 			continue;
 		}
 
@@ -384,13 +383,13 @@ TArray<FAction>& UBehaviorGeneratorFunctionLibrary::AddItemInteractionActions(co
 	return AvailableActions;
 }
 
-TArray<FAgentState>& UBehaviorGeneratorFunctionLibrary::PrintGeneratedStory(TArray<FAction>& AvailableActions, TArray<FAgentState>& AvailableAgents)
+TArray<FAgentState>& UBehaviorGeneratorFunctionLibrary::PrintGeneratedStory(TArray<FAction>& AvailableActions, TArray<FAgentState>& AvailableAgents, FString& StoryLine)
 {
 	TArray<FAgentState> SelectedAgents;
 
 	ShuffleActions(AvailableActions);
 
-	ShuffleAgents(AvailableAgents);
+	// ShuffleAgents(AvailableAgents);
 
 	for (const FAction& Action : AvailableActions)
 	{
@@ -398,7 +397,7 @@ TArray<FAgentState>& UBehaviorGeneratorFunctionLibrary::PrintGeneratedStory(TArr
 		{
 			ApplyConsequences(AvailableAgents, Action.m_Consequences, SelectedAgents);
 
-			UE_LOG(LogBehaviorGenerator, Log, TEXT("%s %s: %s"), *GenerateTextForAgents(SelectedAgents), *Action.m_Name, *GenerateTextForConsequences(Action.m_Consequences));
+			StoryLine = FString::Printf(TEXT("%s %s: %s"), *GenerateTextForAgents(SelectedAgents), *Action.m_Name, *GenerateTextForConsequences(Action.m_Consequences));
 
 			return AvailableAgents;
 		}
@@ -406,7 +405,7 @@ TArray<FAgentState>& UBehaviorGeneratorFunctionLibrary::PrintGeneratedStory(TArr
 
 	if (SelectedAgents.Num() <= 0)
 	{
-		UE_LOG(LogBehaviorGenerator, Log, TEXT("No actions available."));
+		StoryLine = FString::Printf(TEXT("No actions available."));
 	}
 
 	return AvailableAgents;

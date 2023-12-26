@@ -32,7 +32,7 @@ struct FAttribute
 	EAttributeType m_Type;
 	UPROPERTY()
 	bool m_IsNegated = false;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FString m_Value;
 };
 
@@ -73,9 +73,9 @@ struct FAgentState
 {
 	GENERATED_BODY()
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FString m_Name;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	TArray<FAttribute> m_Attributes;
 	UPROPERTY()
 	ETarget m_Role;
@@ -88,7 +88,7 @@ struct FItem
 
 	UPROPERTY()
 	EAttributeType m_Type;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FString m_Value;
 	UPROPERTY()
 	TArray<FRequirement> m_Requirements;
@@ -99,7 +99,7 @@ struct FAction
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FString m_Name;
 	UPROPERTY()
 	TArray<FRequirement> m_Requirements;
@@ -130,7 +130,7 @@ public:
 	static TArray<FAction>& AddItemInteractionActions(const TArray<FItem> Items, UPARAM(ref) TArray<FAction>& AvailableActions);
 	
 	UFUNCTION(BlueprintCallable)
-	static TArray<FAgentState>& PrintGeneratedStory(UPARAM(ref) TArray<FAction>& AvailableActions, UPARAM(ref) TArray<FAgentState>& AvailableAgents);
+	static TArray<FAgentState>& PrintGeneratedStory(UPARAM(ref) TArray<FAction>& AvailableActions, UPARAM(ref) TArray<FAgentState>& AvailableAgents, FString& StoryLine);
 
 private:
 
