@@ -397,9 +397,13 @@ TArray<FAgentState>& UBehaviorGeneratorFunctionLibrary::PrintGeneratedStory(TArr
 		{
 			ApplyConsequences(AvailableAgents, Action.m_Consequences, SelectedAgents);
 
-			StoryLine = FString::Printf(TEXT("%s %s: %s"), *GenerateTextForAgents(SelectedAgents), *Action.m_Name, *GenerateTextForConsequences(Action.m_Consequences));
+			StoryLine = FString::Printf(TEXT("%s: %s"), *GenerateTextForAction(SelectedAgents, Action.m_Name), *GenerateTextForConsequences(Action.m_Consequences));
 
 			return AvailableAgents;
+		}
+		else
+		{
+			SelectedAgents.Empty();
 		}
 	}
 
@@ -413,33 +417,33 @@ TArray<FAgentState>& UBehaviorGeneratorFunctionLibrary::PrintGeneratedStory(TArr
 
 bool UBehaviorGeneratorFunctionLibrary::AssignRoles(TArray<FAgentState>& AvailableAgents, const TArray<FRequirement>& Requirements, TArray<FAgentState>& OutSelectedAgents)
 {
-	for (FAgentState& Agent : AvailableAgents)
+	OutSelectedAgents.Empty();
+
+	TArray<FRequirement> FirstAgentRequirements;
+	TArray<FRequirement> SecondAgentRequirements;
+
+	for (const FRequirement& Requirement : Requirements)
+	{
+		if (Requirement.m_Target == ETarget::Target1)
+		{
+			FirstAgentRequirements.Add(Requirement);
+		}
+		else if (Requirement.m_Target == ETarget::Target2)
+		{
+			SecondAgentRequirements.Add(Requirement);
+		}
+	}
+
+	FAgentState SelectedFirstAgent;
+	FAgentState SelectedSecondAgent;
+
+	for (const FAgentState& Agent : AvailableAgents)
 	{
 		bool MeetsAllRequirements = true;
-		Agent.m_Role = ETarget::None;
-		ETarget AgentRole = ETarget::None;
 		
-		for (const FRequirement& Requirement : Requirements)
+		for (const FRequirement& Requirement : FirstAgentRequirements)
 		{
-			if (OutSelectedAgents.Num() > 0 && Requirement.m_Target == ETarget::Target1)
-			{
-				MeetsAllRequirements = false;
-				break;
-			}
-
-			if (DoesAgentMeetRequirement(Agent, Requirement))
-			{
-				if (AgentRole != ETarget::None && AgentRole != Requirement.m_Target)
-				{
-					MeetsAllRequirements = false;
-					break;
-				}
-				else
-				{
-					AgentRole = Requirement.m_Target;
-				}
-			}
-			else
+			if (!DoesAgentMeetRequirement(Agent, Requirement))
 			{
 				MeetsAllRequirements = false;
 				break;
@@ -452,25 +456,60 @@ bool UBehaviorGeneratorFunctionLibrary::AssignRoles(TArray<FAgentState>& Availab
 		}
 		else
 		{
-			Agent.m_Role = AgentRole;
-			OutSelectedAgents.Add(Agent);
+			SelectedFirstAgent = Agent;
+			OutSelectedAgents.Add(SelectedFirstAgent);
+			break;
 		}
 	}
 
-	return OutSelectedAgents.Num() > 0;
+	if (SecondAgentRequirements.Num() > 0)
+	{
+		for (const FAgentState& Agent : AvailableAgents)
+		{
+			if (Agent.m_Name == SelectedFirstAgent.m_Name)
+			{
+				continue;
+			}
+
+			bool MeetsAllRequirements = true;
+
+			for (const FRequirement& Requirement : SecondAgentRequirements)
+			{
+				if (!DoesAgentMeetRequirement(Agent, Requirement))
+				{
+					MeetsAllRequirements = false;
+					break;
+				}
+			}
+
+			if (!MeetsAllRequirements)
+			{
+				continue;
+			}
+			else
+			{
+				SelectedSecondAgent = Agent;
+				OutSelectedAgents.Add(SelectedSecondAgent);
+				break;
+			}
+		}
+	}
+
+	return SecondAgentRequirements.Num() > 0 ? OutSelectedAgents.Num() == 2 : OutSelectedAgents.Num() == 1;
 }
 
 void UBehaviorGeneratorFunctionLibrary::ApplyConsequences(TArray<FAgentState>& AvailableAgents, const TArray<FConsequence>& Consequences, const TArray<FAgentState>& SelectedAgents)
 {
 	for (const FConsequence& Consequence : Consequences)
 	{
-		for (const FAgentState& SelectedAgent : SelectedAgents)
+		for (int32 SelectedAgentIdx = 0; SelectedAgentIdx < SelectedAgents.Num(); SelectedAgentIdx++)
 		{
 			for (FAgentState& AvailableAgent : AvailableAgents)
 			{
-				if (SelectedAgent.m_Name == AvailableAgent.m_Name)
+				if (SelectedAgents[SelectedAgentIdx].m_Name == AvailableAgent.m_Name)
 				{
-					if (Consequence.m_Target == SelectedAgent.m_Role)
+					if ((Consequence.m_Target == ETarget::Target1 && SelectedAgentIdx == 0)
+						|| (Consequence.m_Target == ETarget::Target2 && SelectedAgentIdx == 1))
 					{
 						if (Consequence.m_Operation == EOperation::Add)
 						{
@@ -516,7 +555,6 @@ bool UBehaviorGeneratorFunctionLibrary::DoesAgentMeetRequirement(const FAgentSta
 
 	for (const FAttribute& Attribute : Agent.m_Attributes)
 	{
-		// TODO: need to also check for target (multi-player)
 		if (Requirement.m_IsNegated)
 		{
 			if (Requirement.m_Value == Attribute.m_Value)
@@ -538,28 +576,18 @@ bool UBehaviorGeneratorFunctionLibrary::DoesAgentMeetRequirement(const FAgentSta
 	return MeetsRequirement;
 }
 
-FString UBehaviorGeneratorFunctionLibrary::GenerateTextForAgents(const TArray<FAgentState>& Agents)
+FString UBehaviorGeneratorFunctionLibrary::GenerateTextForAction(const TArray<FAgentState>& Agents, FString ActionName)
 {
-	FString Text;
-
-	for (int i = 0; i < Agents.Num(); i++)
-	{
-		if (i > 0)
-		{
-			Text.Append(" and ");
-		}
-
-		Text.Append(Agents[i].m_Name);
-	}
+	FString Text = Agents[0].m_Name;
+	
+	Text.Append(" is ");
 
 	if (Agents.Num() > 1)
 	{
-		Text.Append(" are");
+		ActionName = ActionName.Replace(L"{T2}", *Agents[1].m_Name);
 	}
-	else
-	{
-		Text.Append(" is");
-	}
+
+	Text.Append(ActionName);
 
 	return Text;
 }

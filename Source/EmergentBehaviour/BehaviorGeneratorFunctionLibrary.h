@@ -77,8 +77,6 @@ struct FAgentState
 	FString m_Name;
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FAttribute> m_Attributes;
-	UPROPERTY()
-	ETarget m_Role;
 };
 
 USTRUCT(BlueprintType)
@@ -146,7 +144,7 @@ private:
 
 	static bool DoesAgentMeetRequirement(const FAgentState& Agent, const FRequirement& Requirements);
 
-	static FString GenerateTextForAgents(const TArray<FAgentState>& Agents);
+	static FString GenerateTextForAction(const TArray<FAgentState>& Agents, FString ActionName);
 
 	static FString GenerateTextForConsequences(const TArray<FConsequence>& Consequences);
 

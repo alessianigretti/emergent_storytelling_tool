@@ -26,3 +26,4 @@ Name_robbing_a_bank,"L_bank,P_weapon,T_desperate,T_overwhelmed,=,A_T_criminal,A_
 Name_robbing_a_shop,"L_shop,P_weapon,T_desperate,T_overwhelmed,=,A_T_criminal,A_P_money"
 Name_getting_arrested,"L_prison,T_criminal,=,R_T_criminal,R_T_overwhelmed,R_T_desperate,R_P_weapon"
 Name_getting_a_loan,"L_bank,P_N_money,=,A_P_money,A_T_stressed"
+Name_talking_to_{T2},"T1_bored,T1_social,T2_bored,=,R_T1_bored,R_T2_bored"
