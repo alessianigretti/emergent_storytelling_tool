@@ -1,5 +1,5 @@
 # Emergent Storytelling Tool
-UE5 tool that generates subsequent scenarios given actions, agents, locations and objects.
+The Emergent Storytelling Tool is a project made with Unreal Engine 5 that generates subsequent scenarios given provided actions, agents, locations and objects.
 
 ![image](https://github.com/alessianigretti/emergent_storytelling_tool/assets/17513294/07d98767-c20a-4b8f-89f9-c0ad08b82459)
 
