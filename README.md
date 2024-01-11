@@ -16,7 +16,7 @@ The Emergent Storytelling Tool is a project made with Unreal Engine 5 that gener
 ## Introduction
 This Unreal Engine project is a UI tool that allows to visualise the effects of a sequence of actions executed on a set of agents via the use of smart objects in predetermined locations. Actions are selected based on their requirements, which are represented by the presence of traits in an agent or objects in a location. Agents, items and actions are fully authorable, and the sequence of events that can be created is virtually infinite and entirely dependent on the authoring of the data.
 
-I developed an initial version of this tool made with Unity during my time at Klang Games with David Oppenberg (Game Designer), and I recently decided to repurpose it for Unreal Engine as a personal project. Shout-out to Oddur Magnusson and the team at Klang Games for allowing me to freely share this, and to every friend who had fun playing with it and helping me author a working version of the initial data used.
+I developed an initial version of this tool with David Oppenberg (Game Designer) using Unity during my time at Klang Games, and I recently decided to repurpose it for Unreal Engine as a personal project. Shout-out to Oddur Magnusson and the team at Klang Games for allowing me to freely share this, and to every friend who had fun playing with it and helping me author a working version of the initial data used.
 
 ## Components
 The tool is comprised of 3 main elements:
